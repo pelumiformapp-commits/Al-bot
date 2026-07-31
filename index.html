@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Robot Interface</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 20px auto; padding: 15px; background: #fafafa; }
+        #chatBox { border: 1px solid #ddd; height: 350px; overflow-y: auto; background: white; padding: 10px; margin-bottom: 12px; border-radius: 8px; }
+        .msg { margin: 8px 0; padding: 10px; border-radius: 8px; max-width: 80%; word-wrap: break-word; }
+        .user { background: #d1e7dd; margin-left: auto; text-align: right; }
+        .bot { background: #e2e3e5; margin-right: auto; text-align: left; }
+        .sys { background: #f8d7da; font-size: 12px; color: #842029; text-align: center; margin: auto; }
+        #logsPanel { margin-top: 40px; background: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px dashed #bbb; }
+        .log-item { background: white; padding: 10px; margin: 10px 0; border-radius: 4px; border-left: 5px solid #0d6efd; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <h2>🤖 Chat with my Robot</h2>
+    
+    <label for="code"><b>Passcode:</b></label><br>
+    <input type="password" id="code" placeholder="Enter Public or Owner Passcode" style="width: 95%; padding: 8px; margin: 8px 0;"><br>
+    
+    <div id="chatBox"></div>
+    
+    <div style="display: flex; gap: 5px;">
+        <input type="text" id="userInput" placeholder="Type a message..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        <button onclick="send()" style="padding: 10px 20px; background: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer;">Send</button>
+    </div>
+
+    <div id="logsPanel">
+        <h4>📊 History Dashboard (Owner Only)</h4>
+        <p style="font-size: 12px; color: #666;">Type your Builder Passcode above, then click below to read all user messages.</p>
+        <button onclick="loadLogs()" style="padding: 8px 15px; background: #212529; color: white; border: none; border-radius: 4px; cursor: pointer;">Refresh Conversations</button>
+        <div id="logContent" style="margin-top: 10px; max-height: 250px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "https://onrender.com"; 
+
+        async function send() {
+            const msg = document.getElementById("userInput").value.strip ? document.getElementById("userInput").value.trim() : document.getElementById("userInput").value;
+            const passcode = document.getElementById("code").value;
+            if(!msg) return;
+            
+            appendMsg(msg, "user");
+            document.getElementById("userInput").value = "";
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/chat`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: msg, passcode: passcode })
+                });
+                const data = await res.json();
+                
+                if (data.error) {
+                    appendMsg(`Error: ${data.error}`, "sys");
+                } else {
+                    appendMsg(data.reply, "bot");
+                }
+            } catch(e) {
+                appendMsg("Could not connect to the robot backend.", "sys");
+            }
+        }
+
+        function appendMsg(text, type) {
+            const box = document.getElementById("chatBox");
+            box.innerHTML += `<div class="msg ${type}">${text}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function loadLogs() {
+            const passcode = document.getElementById("code").value;
+            const container = document.getElementById("logContent");
+            container.innerHTML = "Loading logs...";
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/logs`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ passcode: passcode })
+                });
+                const data = await res.json();
+                
+                if(data.error) {
+                    container.innerHTML = `<span style="color:red">${data.error}</span>`;
+                    return;
+                }
+
+                container.innerHTML = "";
+                if(data.logs.length === 0) {
+                    container.innerHTML = "No conversations logged yet.";
+                    return;
+                }
+
+                data.logs.forEach(l => {
+                    container.innerHTML += `
+                        <div class="log-item">
+                            <small style="color:#888;">[${l.time}] User: ${l.id} (${l.role})</small><br>
+                            <b>User:</b> ${l.msg}<br>
+                            <b>Robot:</b> ${l.rep}
+                        </div>`;
+                });
+            } catch(e) {
+                container.innerHTML = "Failed to load log history.";
+            }
+        }
+    </script>
+</body>
+</html>
