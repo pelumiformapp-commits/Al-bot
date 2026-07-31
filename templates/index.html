@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PENDO AI</title>
+
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Login -->
+<div id="login" class="login">
+
+    <h1>PENDO AI</h1>
+
+    <input
+        type="text"
+        id="username"
+        placeholder="Enter your name">
+
+    <button onclick="startChat()">
+        Start Chat
+    </button>
+
+</div>
+
+<!-- Chat -->
+<div id="chat" class="chat" style="display:none;">
+
+    <div class="header">
+        <h2>PENDO AI</h2>
+        <span>🟢 Online</span>
+    </div>
+
+    <div id="messages" class="messages"></div>
+
+    <div class="bottom">
+
+        <input
+            id="message"
+            type="text"
+            placeholder="Type a message...">
+
+        <input
+            type="file"
+            id="image"
+            accept="image/*"
+            hidden>
+
+        <button onclick="pickImage()">🖼️</button>
+
+        <button onclick="voiceInput()">🎤</button>
+
+        <button onclick="sendMessage()">➤</button>
+
+    </div>
+
+</div>
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>
