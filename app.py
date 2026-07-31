@@ -1,60 +1,40 @@
 from flask import Flask, render_template, request, jsonify
-import os
-import json
 
 app = Flask(__name__)
 
-USERS_FOLDER = "users"
-
-
-if not os.path.exists(USERS_FOLDER):
-    os.makedirs(USERS_FOLDER)
-
-
 @app.route("/")
-def login():
-    return render_template("login.html")
+def home():
+    return render_template("index.html")
 
 
-@app.route("/chat")
+@app.route("/chat", methods=["POST"])
 def chat():
-    username = request.args.get("username")
-    return render_template("chat.html", username=username)
 
+    data = request.get_json()
 
-@app.route("/save_message", methods=["POST"])
-def save_message():
-    data = request.json
-    username = data["username"]
-    message = data["message"]
+    message = data["message"].lower()
 
-    file_path = os.path.join(USERS_FOLDER, f"{username}.json")
+    if "hello" in message or "hi" in message:
+        reply = "Hello 👋 How are you?"
 
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            chats = json.load(f)
+    elif "how are you" in message:
+        reply = "I'm fine 😊 What can I help you with?"
+
+    elif "your name" in message:
+        reply = "My name is PENDO AI."
+
+    elif "who made you" in message:
+        reply = "Engineer Pelumi created me. 😎"
+
+    elif "bye" in message:
+        reply = "Goodbye 👋 Have a great day."
+
     else:
-        chats = []
+        reply = "Interesting 🤔. Tell me more."
 
-    chats.append(message)
-
-    with open(file_path, "w") as f:
-        json.dump(chats, f, indent=4)
-
-    return jsonify({"status": "saved"})
-
-
-@app.route("/get_messages/<username>")
-def get_messages(username):
-    file_path = os.path.join(USERS_FOLDER, f"{username}.json")
-
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            chats = json.load(f)
-    else:
-        chats = []
-
-    return jsonify(chats)
+    return jsonify({
+        "reply": reply
+    })
 
 
 if __name__ == "__main__":
